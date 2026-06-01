@@ -6,7 +6,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use App\Support\Api\ApiExceptionRenderer;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -21,36 +20,37 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (ValidationException $exception, Request $request) {
-            if (! ApiExceptionRenderer::shouldRenderApi($request)) {
+            if (!$request->is('api/*')) {
                 return null;
             }
 
-            return ApiExceptionRenderer::validation($exception);
+            return api_error('Validation failed.', $exception->errors(), 422);
         });
 
         $exceptions->render(function (AuthenticationException $exception, Request $request) {
-            if (! ApiExceptionRenderer::shouldRenderApi($request)) {
+            if (!$request->is('api/*')) {
                 return null;
             }
 
-            return ApiExceptionRenderer::unauthenticated();
+            return api_error('Unauthenticated.', ['auth' => ['Authentication required.']], 401);
         });
 
         $exceptions->render(function (NotFoundHttpException $exception, Request $request) {
-            if (! ApiExceptionRenderer::shouldRenderApi($request)) {
+            if (!$request->is('api/*')) {
                 return null;
             }
 
-            return ApiExceptionRenderer::notFound();
+            return api_error('Resource not found.', ['resource' => ['The requested endpoint was not found.']], 404);
         });
 
         $exceptions->render(function (\Throwable $exception, Request $request) {
-            if (! ApiExceptionRenderer::shouldRenderApi($request)) {
+            if (!$request->is('api/*')) {
                 return null;
             }
 
             report($exception);
 
-            return ApiExceptionRenderer::serverError();
+            return api_error('Internal server error.', ['server' => ['An unexpected error occurred.']], 500);
         });
     })->create();
+

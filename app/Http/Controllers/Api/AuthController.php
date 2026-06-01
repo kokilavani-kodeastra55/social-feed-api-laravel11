@@ -5,43 +5,50 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\LogoutRequest;
-use App\Models\User;
-use App\Support\ApiResponse;
+use App\Services\AuthService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function login(LoginRequest $request)
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
     {
-        $validated = $request->validated();
+        $this->authService = $authService;
+    }
 
-        $user = User::query()->where('email', $validated['email'])->first();
+    /**
+     * Authenticate user credentials and return Sanctum access token.
+     */
+    public function login(LoginRequest $request): JsonResponse
+    {
+        $result = $this->authService->authenticate($request->validated());
 
-        if (! $user || ! Hash::check($validated['password'], $user->password)) {
-            return ApiResponse::error('Invalid credentials.', [
+        if (! $result) {
+            return api_error('Invalid credentials.', [
                 'auth' => ['The provided credentials are incorrect.'],
             ], 401);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return ApiResponse::success('Login successful.', [
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user->only(['id', 'name', 'email']),
-        ]);
+        return api_success($result, 'Login successful.');
     }
 
-    public function logout(LogoutRequest $request)
+    /**
+     * Revoke current user Sanctum access token.
+     */
+    public function logout(LogoutRequest $request): JsonResponse
     {
-        $request->user()->currentAccessToken()?->delete();
+        $this->authService->logout($request->user());
 
-        return ApiResponse::success('Logout successful.');
+        return api_success(null, 'Logout successful.');
     }
 
-    public function me(Request $request)
+    /**
+     * Get authenticated user profile.
+     */
+    public function me(Request $request): JsonResponse
     {
-        return ApiResponse::success('Authenticated user details.', $request->user());
+        return api_success($request->user(), 'Authenticated user details.');
     }
 }

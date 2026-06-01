@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -12,27 +14,16 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
+     * The name of the factory's corresponding model.
+     *
+     * @var string
      */
-    protected static ?string $password;
+    protected $model = User::class;
 
     /**
-     * Curated identities for social feed testing.
-     *
-     * @var array<int, array{name: string, email: string}>
+     * The current password being used by the factory.
      */
-    private array $socialFeedUsers = [
-        ['name' => 'Aarav Mehta', 'email' => 'aarav.mehta@example.com'],
-        ['name' => 'Diya Kapoor', 'email' => 'diya.kapoor@example.com'],
-        ['name' => 'Rohan Sharma', 'email' => 'rohan.sharma@example.com'],
-        ['name' => 'Ananya Verma', 'email' => 'ananya.verma@example.com'],
-        ['name' => 'Kabir Nair', 'email' => 'kabir.nair@example.com'],
-        ['name' => 'Isha Reddy', 'email' => 'isha.reddy@example.com'],
-        ['name' => 'Arjun Patel', 'email' => 'arjun.patel@example.com'],
-        ['name' => 'Meera Iyer', 'email' => 'meera.iyer@example.com'],
-        ['name' => 'Vikram Joshi', 'email' => 'vikram.joshi@example.com'],
-        ['name' => 'Naina Singh', 'email' => 'naina.singh@example.com'],
-    ];
+    protected static ?string $password = null;
 
     /**
      * Define the model's default state.
@@ -45,7 +36,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => self::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }
@@ -60,14 +51,5 @@ class UserFactory extends Factory
         ]);
     }
 
-    /**
-     * Create deterministic test users for login and API testing.
-     */
-    public function socialFeedTestUsers(): static
-    {
-        return $this->sequence(...$this->socialFeedUsers)->state(fn (array $attributes) => [
-            'password' => static::$password ??= Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-    }
+
 }

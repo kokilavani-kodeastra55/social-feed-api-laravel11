@@ -1,0 +1,583 @@
+{
+	"info": {
+		"_postman_id": "c1387d84-c812-4ebc-b3a1-2da5b81b2ca6",
+		"name": "Social Feed API",
+		"description": "Postman collection for testing the Laravel 11 Social Feed API including login/logout, posts, nested comments, polymorphic likes, and chronological/ranked feeds.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+									"    console.log(\"Sanctum Token set successfully: \" + jsonData.data.token);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"aarav.mehta@example.com\",\n    \"password\": \"password\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"login"
+							]
+						},
+						"description": "Authenticate user using credentials. Generates and returns a Sanctum API token, automatically saving it to the collection variables upon success."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Get current authenticated user details."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"logout"
+							]
+						},
+						"description": "Revokes current Sanctum API token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "List Posts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/posts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"posts"
+							]
+						},
+						"description": "List all feed posts."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set(\"post_id\", jsonData.data.id);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"A Trip to the Mountains\",\n    \"description\": \"Had a wonderful trekking weekend. The view was breath-taking!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/posts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"posts"
+							]
+						},
+						"description": "Create a new post. Automatically captures the created post ID in the `post_id` collection variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Show Post",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/posts/{{post_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"posts",
+								"{{post_id}}"
+							]
+						},
+						"description": "Fetch a single post details by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Mountain Post Title\",\n    \"description\": \"Updated description text for my trekking post.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/posts/{{post_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"posts",
+								"{{post_id}}"
+							]
+						},
+						"description": "Update post details. Only the author of the post can perform this action."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Post",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/posts/{{post_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"posts",
+								"{{post_id}}"
+							]
+						},
+						"description": "Delete a post. Only the author of the post can perform this action."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Comments",
+			"item": [
+				{
+					"name": "Comment on Post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.success && jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set(\"comment_id\", jsonData.data.id);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"comment\": \"Amazing click! Looks incredibly serene.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/posts/{{post_id}}/comments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"posts",
+								"{{post_id}}",
+								"comments"
+							]
+						},
+						"description": "Post a root comment on a post. Automatically captures comment ID in `comment_id` variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Reply to Comment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"comment\": \"I agree, the light filtering through the trees is perfect!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/comments/{{comment_id}}/reply",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"comments",
+								"{{comment_id}}",
+								"reply"
+							]
+						},
+						"description": "Post a reply comment nested under another comment."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Comment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"comment\": \"Amazing click! Looks incredibly serene (Edited).\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/comments/{{comment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"comments",
+								"{{comment_id}}"
+							]
+						},
+						"description": "Update comment text. Only comment owner can perform this action."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Comment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/comments/{{comment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"comments",
+								"{{comment_id}}"
+							]
+						},
+						"description": "Delete comment. Only comment owner can perform this action."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Likes",
+			"item": [
+				{
+					"name": "Toggle Post Like",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/posts/{{post_id}}/like",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"posts",
+								"{{post_id}}",
+								"like"
+							]
+						},
+						"description": "Like or unlike a post (toggle behavior)."
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Comment Like",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/comments/{{comment_id}}/like",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"comments",
+								"{{comment_id}}",
+								"like"
+							]
+						},
+						"description": "Like or unlike a comment (toggle behavior)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Feed",
+			"item": [
+				{
+					"name": "Get Chronological Feed",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/feed",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"feed"
+							]
+						},
+						"description": "Get chronological posts feed with authors, counts, user-liked boolean flag, and nested comments/replies structure using cursor pagination."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Popular Ranked Feed",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/feed?ranking=popular",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v1",
+								"feed"
+							],
+							"query": [
+								{
+									"key": "ranking",
+									"value": "popular"
+								}
+							]
+						},
+						"description": "Get feed sorted by popularity ranking (likes + comments) using offset pagination."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "post_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "comment_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}

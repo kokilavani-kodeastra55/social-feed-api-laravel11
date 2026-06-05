@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\PostController;
 use App\Http\Controllers\Api\V1\CommentController;
 use App\Http\Controllers\Api\V1\LikeController;
 use App\Http\Controllers\Api\V1\FeedController;
+use App\Http\Controllers\Api\V1\CommentReplyController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -24,26 +25,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
 // V1 Prefix Group (/api/v1/...)
 Route::prefix('v1')->group(function (): void {
-    // Public Status Route
-    Route::get('/status', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'API is reachable.',
-            'data' => [
-                'version' => 'v1',
-            ],
-            'errors' => null,
-        ]);
-    });
 
     // Protected Routes inside V1 Group
     Route::middleware('auth:sanctum')->group(function (): void {
         // Authenticated profile details
-        Route::get('/auth/profile', function (Request $request) {
-            return api_success([
-                'user' => $request->user(),
-            ], 'Authenticated route access granted.');
-        });
+        Route::get('/auth/profile', [AuthController::class, 'me']);
 
         // Posts Resources
         Route::apiResource('posts', PostController::class);
@@ -53,12 +39,16 @@ Route::prefix('v1')->group(function (): void {
         Route::post('comments/{comment}/reply', [CommentController::class, 'reply']);
         Route::put('comments/{comment}', [CommentController::class, 'update']);
         Route::delete('comments/{comment}', [CommentController::class, 'destroy']);
-
-        // Likes Toggle (Polymorphic)
+        // Likes Toggle 
         Route::post('posts/{post}/like', [LikeController::class, 'togglePostLike']);
         Route::post('comments/{comment}/like', [LikeController::class, 'toggleCommentLike']);
+        Route::post('replies/{reply}/like', [LikeController::class, 'toggleReplyLike']);
 
-        // Feed chronologically or popular ranked
+        // Reply Management
+        Route::put('replies/{reply}', [CommentReplyController::class, 'update']);
+        Route::delete('replies/{reply}', [CommentReplyController::class, 'destroy']);
+
+        // Feed Endpoint
         Route::get('feed', [FeedController::class, 'index']);
     });
 });

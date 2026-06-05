@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Post;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-class Comment extends Model
+class Feed extends Model
 {
     use HasFactory;
+
+    protected $table = 'feeds';
 
     protected $fillable = [
         'user_id',
         'post_id',
-        'comment',
-        'likes_count',
-        'replies_count',
     ];
 
     public function user(): BelongsTo
@@ -28,15 +27,5 @@ class Comment extends Model
     public function post(): BelongsTo
     {
         return $this->belongsTo(Post::class);
-    }
-
-    public function replies(): HasMany
-    {
-        return $this->hasMany(CommentReply::class, 'comment_id');
-    }
-
-    public function likes(): MorphMany
-    {
-        return $this->morphMany(Like::class, 'likeable');
     }
 }

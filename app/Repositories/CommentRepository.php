@@ -11,7 +11,7 @@ class CommentRepository
      */
     public function findById(int $id): ?Comment
     {
-        return Comment::query()->find($id);
+        return Comment::find($id);
     }
 
     /**
@@ -19,7 +19,15 @@ class CommentRepository
      */
     public function create(array $data): Comment
     {
-        return Comment::query()->create($data);
+        return Comment::create($data);
+    }
+
+    /**
+     * Create a new comment reply.
+     */
+    public function createReply(array $data): \App\Models\CommentReply
+    {
+        return \App\Models\CommentReply::create($data);
     }
 
     /**
@@ -32,10 +40,27 @@ class CommentRepository
     }
 
     /**
+     * Update an existing comment reply.
+     */
+    public function updateReply(\App\Models\CommentReply $reply, array $data): \App\Models\CommentReply
+    {
+        $reply->update($data);
+        return $reply;
+    }
+
+    /**
      * Delete a comment.
      */
     public function delete(Comment $comment): bool
     {
-        return (bool) $comment->delete();
+        return $comment->delete();
+    }
+
+    /**
+     * Delete a comment reply.
+     */
+    public function deleteReply(\App\Models\CommentReply $reply): bool
+    {
+        return $reply->delete();
     }
 }

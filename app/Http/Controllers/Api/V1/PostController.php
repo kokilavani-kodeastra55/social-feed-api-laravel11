@@ -47,7 +47,7 @@ class PostController extends Controller
         } catch (\Throwable $e) {
             Log::error('Error creating post: ' . $e->getMessage());
             return api_error('Failed to create post.', null, 500);
-        }
+        }   
     }
 
     /**

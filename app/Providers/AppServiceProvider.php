@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,7 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Relation::morphMap([
+            'post' => \App\Models\Post::class,
+            'comment' => \App\Models\Comment::class,
+            'reply' => \App\Models\CommentReply::class,
+            'comment_reply' => \App\Models\CommentReply::class,
+        ]);
     }
 }
-

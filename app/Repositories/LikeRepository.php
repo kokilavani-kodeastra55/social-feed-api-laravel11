@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class LikeRepository
 {
     /**
-     * Find a user's like on a polymorphic model (Post or Comment).
+     * Find a user's like on (Post or Comment).
      */
     public function findLikeForModel(Model $model, int $userId): ?Like
     {
@@ -20,11 +20,11 @@ class LikeRepository
      */
     public function delete(Like $like): bool
     {
-        return (bool) $like->delete();
+        return $like->delete();
     }
 
     /**
-     * Create a like for a polymorphic model.
+     * Create a like.
      */
     public function createForModel(Model $model, int $userId): Like
     {
@@ -32,7 +32,7 @@ class LikeRepository
     }
 
     /**
-     * Get count of likes for a polymorphic model.
+     * Get count of likes.
      */
     public function countForModel(Model $model): int
     {

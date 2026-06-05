@@ -2,14 +2,13 @@
 
 namespace App\Http\Resources\Api\V1;
 
-use App\Http\Resources\Api\V1\CommentReplyResource;
-
-class CommentResource extends BaseApiResource
+class CommentReplyResource extends BaseApiResource
 {
     public function toArray($request): array
     {
         return [
             'id' => $this->id,
+            'comment_id' => $this->comment_id,
             'comment' => $this->comment,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
@@ -25,9 +24,6 @@ class CommentResource extends BaseApiResource
                 'id' => $this->user->id,
                 'name' => $this->user->name,
             ] : null,
-            'likes_count' => (int) ($this->likes_count ?? $this->likes()->count()),
-            'reply_count' => (int) ($this->replies_count),
-            'replies' => CommentReplyResource::collection($this->whenLoaded('replies')),
         ];
     }
 }

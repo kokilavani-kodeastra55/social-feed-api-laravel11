@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Models\Comment;
 use App\Models\Like;
 use App\Models\Post;
+use App\Models\Feed;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -15,6 +16,25 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user) {
+            $posts = Post::all();
+            $feedData = [];
+            foreach ($posts as $post) {
+                $feedData[] = [
+                    'user_id' => $user->id,
+                    'post_id' => $post->id,
+                    'created_at' => $post->created_at ?? now(),
+                    'updated_at' => $post->updated_at ?? now(),
+                ];
+            }
+            if (! empty($feedData)) {
+                Feed::insert($feedData);
+            }
+        });
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -63,5 +83,10 @@ class User extends Authenticatable
     public function likes(): HasMany
     {
         return $this->hasMany(Like::class);
+    }
+
+    public function feeds(): HasMany
+    {
+        return $this->hasMany(Feed::class);
     }
 }

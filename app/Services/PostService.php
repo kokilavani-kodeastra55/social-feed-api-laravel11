@@ -28,9 +28,10 @@ class PostService
      */
     public function createPost(array $data, int $userId): Post
     {
-        return $this->postRepository->create(array_merge($data, ['user_id' => $userId]));
-    }
+        $data['user_id'] = $userId;
 
+        return $this->postRepository->create($data);
+    }
     /**
      * Update a post.
      */

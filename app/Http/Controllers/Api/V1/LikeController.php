@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\LikeService;
 use App\Models\Post;
 use App\Models\Comment;
+use App\Models\CommentReply;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -47,6 +48,22 @@ class LikeController extends Controller
         } catch (\Throwable $e) {
             Log::error('Error toggling comment like: ' . $e->getMessage());
             return api_error('Failed to toggle like on comment.', null, 500);
+        }
+    }
+
+    /**
+     * Toggle like/unlike on a comment reply.
+     */
+    public function toggleReplyLike(CommentReply $reply): JsonResponse
+    {
+        try {
+            $result = $this->likeService->toggleReplyLike($reply, auth()->id());
+            $message = $result['liked'] ? 'Reply liked.' : 'Reply unliked.';
+
+            return api_success($result, $message);
+        } catch (\Throwable $e) {
+            Log::error('Error toggling reply like: ' . $e->getMessage());
+            return api_error('Failed to toggle like on reply.', null, 500);
         }
     }
 }

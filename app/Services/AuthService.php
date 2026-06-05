@@ -26,7 +26,6 @@ class AuthService
             return null;
         }
 
-        // Revoke previous tokens to support only one active token
         $user->tokens()->delete();
 
         $token = $user->createToken('api-token')->plainTextToken;

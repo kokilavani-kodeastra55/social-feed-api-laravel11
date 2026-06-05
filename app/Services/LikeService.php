@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Comment;
+use App\Models\CommentReply;
 use App\Models\Post;
 use App\Repositories\LikeRepository;
 use Illuminate\Database\Eloquent\Model;
@@ -33,7 +34,15 @@ class LikeService
     }
 
     /**
-     * Private helper to toggle polymorphic like.
+     * Toggle like on reply.
+     */
+    public function toggleReplyLike(CommentReply $reply, int $userId): array
+    {
+        return $this->toggleLike($reply, $userId);
+    }
+
+    /**
+     * Private helper to toggle like.
      */
     private function toggleLike(Model $model, int $userId): array
     {

@@ -3,16 +3,22 @@
 namespace App\Services;
 
 use App\Models\Comment;
+use App\Models\CommentReply;
 use App\Models\Post;
 use App\Repositories\CommentRepository;
+use App\Repositories\CommentReplyRepository;
 
 class CommentService
 {
     protected CommentRepository $commentRepository;
+    protected CommentReplyRepository $commentReplyRepository;
 
-    public function __construct(CommentRepository $commentRepository)
-    {
+    public function __construct(
+        CommentRepository $commentRepository,
+        CommentReplyRepository $commentReplyRepository
+    ) {
         $this->commentRepository = $commentRepository;
+        $this->commentReplyRepository = $commentReplyRepository;
     }
 
     /**
@@ -24,20 +30,18 @@ class CommentService
             'post_id' => $post->id,
             'user_id' => $userId,
             'comment' => $data['comment'],
-            'parent_id' => null,
         ]);
     }
 
     /**
      * Create nested reply.
      */
-    public function createReply(Comment $comment, array $data, int $userId): Comment
+    public function createReply(Comment $comment, array $data, int $userId): CommentReply
     {
-        return $this->commentRepository->create([
-            'post_id' => $comment->post_id,
+        return $this->commentReplyRepository->create([
+            'comment_id' => $comment->id,
             'user_id' => $userId,
             'comment' => $data['comment'],
-            'parent_id' => $comment->id,
         ]);
     }
 

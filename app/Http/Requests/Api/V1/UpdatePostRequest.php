@@ -9,6 +9,7 @@ class UpdatePostRequest extends BaseApiRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
+            'sorting_order' => ['nullable', 'integer'],
         ];
     }
 }

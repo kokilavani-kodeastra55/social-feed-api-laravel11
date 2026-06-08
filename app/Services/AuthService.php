@@ -3,45 +3,54 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class AuthService
 {
-    protected UserRepository $userRepository;
-
-    public function __construct(UserRepository $userRepository)
-    {
-        $this->userRepository = $userRepository;
-    }
-
     /**
      * Authenticate a user and return token details.
+     *
+     * @param array $credentials
+     * @return array|null
      */
     public function authenticate(array $credentials): ?array
     {
-        $user = $this->userRepository->findByEmail($credentials['email']);
+        try {
+            $user = User::findByEmail($credentials['email']);
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            return null;
+            if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+                return null;
+            }
+
+            $user->tokens()->delete();
+
+            $token = $user->createToken('api-token')->plainTextToken;
+
+            return [
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'user' => $user->only(['id', 'name', 'email']),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('AuthService authenticate error: ' . $e->getMessage(), ['exception' => $e]);
+            throw $e;
         }
-
-        $user->tokens()->delete();
-
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return [
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user->only(['id', 'name', 'email']),
-        ];
     }
 
     /**
      * Log out user by deleting current token.
+     *
+     * @param User $user
+     * @return void
      */
     public function logout(User $user): void
     {
-        $user->currentAccessToken()?->delete();
+        try {
+            $user->currentAccessToken()?->delete();
+        } catch (\Throwable $e) {
+            Log::error('AuthService logout error: ' . $e->getMessage(), ['exception' => $e]);
+            throw $e;
+        }
     }
 }

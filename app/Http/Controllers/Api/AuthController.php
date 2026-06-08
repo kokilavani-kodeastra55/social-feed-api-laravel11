@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LoginRequest;
 use App\Http\Requests\Api\LogoutRequest;
 use App\Services\AuthService;
+use App\Helpers\HTTPResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,35 +21,44 @@ class AuthController extends Controller
 
     /**
      * Authenticate user credentials and return Sanctum access token.
+     *
+     * @param LoginRequest $request
+     * @return JsonResponse
      */
     public function login(LoginRequest $request): JsonResponse
     {
         $result = $this->authService->authenticate($request->validated());
 
         if (! $result) {
-            return api_error('Invalid credentials.', [
+            return HTTPResponse::unauthorized('Invalid credentials.', [
                 'auth' => ['The provided credentials are incorrect.'],
-            ], 401);
+            ]);
         }
 
-        return api_success($result, 'Login successful.');
+        return HTTPResponse::ok($result, 'Login successful.');
     }
 
     /**
      * Revoke current user Sanctum access token.
+     *
+     * @param LogoutRequest $request
+     * @return JsonResponse
      */
     public function logout(LogoutRequest $request): JsonResponse
     {
         $this->authService->logout($request->user());
 
-        return api_success(null, 'Logout successful.');
+        return HTTPResponse::ok(null, 'Logout successful.');
     }
 
     /**
      * Get authenticated user profile.
+     *
+     * @param Request $request
+     * @return JsonResponse
      */
     public function me(Request $request): JsonResponse
     {
-        return api_success($request->user(), 'Authenticated user details.');
+        return HTTPResponse::ok($request->user(), 'Authenticated user details.');
     }
 }

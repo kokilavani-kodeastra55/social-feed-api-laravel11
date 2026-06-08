@@ -14,6 +14,8 @@ class Feed extends Model
 
     protected $table = 'feeds';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'user_id',
         'post_id',

@@ -11,6 +11,7 @@ use App\Services\CommentService;
 use App\Models\Post;
 use App\Models\Comment;
 use App\Models\CommentReply;
+use App\Helpers\HTTPResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -26,6 +27,10 @@ class CommentController extends Controller
 
     /**
      * Store a root comment on a post.
+     *
+     * @param StoreCommentRequest $request
+     * @param Post $post
+     * @return JsonResponse
      */
     public function store(StoreCommentRequest $request, Post $post): JsonResponse
     {
@@ -33,15 +38,19 @@ class CommentController extends Controller
             $comment = $this->commentService->createComment($post, $request->validated(), $request->user()->id);
             $comment->load('user');
 
-            return api_success(new CommentResource($comment), 'Comment posted successfully.', 201);
+            return HTTPResponse::created(new CommentResource($comment), 'Comment posted successfully.');
         } catch (\Throwable $e) {
-            Log::error('Error creating comment: ' . $e->getMessage());
-            return api_error('Failed to post comment.', null, 500);
+            Log::error('Error creating comment: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to post comment.');
         }
     }
 
     /**
      * Store a reply to an existing comment.
+     *
+     * @param StoreCommentRequest $request
+     * @param Comment $comment
+     * @return JsonResponse
      */
     public function reply(StoreCommentRequest $request, Comment $comment): JsonResponse
     {
@@ -49,15 +58,19 @@ class CommentController extends Controller
             $reply = $this->commentService->createReply($comment, $request->validated(), $request->user()->id);
             $reply->load('user');
 
-            return api_success(new CommentReplyResource($reply), 'Reply posted successfully.', 201);
+            return HTTPResponse::created(new CommentReplyResource($reply), 'Reply posted successfully.');
         } catch (\Throwable $e) {
-            Log::error('Error creating reply comment: ' . $e->getMessage());
-            return api_error('Failed to post reply.', null, 500);
+            Log::error('Error creating reply comment: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to post reply.');
         }
     }
 
     /**
      * Update the specified comment.
+     *
+     * @param UpdateCommentRequest $request
+     * @param Comment $comment
+     * @return JsonResponse
      */
     public function update(UpdateCommentRequest $request, Comment $comment): JsonResponse
     {
@@ -67,17 +80,20 @@ class CommentController extends Controller
             $updatedComment = $this->commentService->updateComment($comment, $request->validated());
             $updatedComment->load('user');
 
-            return api_success(new CommentResource($updatedComment), 'Comment updated successfully.');
+            return HTTPResponse::ok(new CommentResource($updatedComment), 'Comment updated successfully.');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return api_error($e->getMessage(), null, 403);
+            return HTTPResponse::forbidden($e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Error updating comment: ' . $e->getMessage());
-            return api_error('Failed to update comment.', null, 500);
+            Log::error('Error updating comment: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to update comment.');
         }
     }
 
     /**
      * Delete the specified comment.
+     *
+     * @param Comment $comment
+     * @return JsonResponse
      */
     public function destroy(Comment $comment): JsonResponse
     {
@@ -86,17 +102,21 @@ class CommentController extends Controller
 
             $this->commentService->deleteComment($comment);
 
-            return api_success(null, 'Comment deleted successfully.');
+            return HTTPResponse::ok(null, 'Comment deleted successfully.');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return api_error($e->getMessage(), null, 403);
+            return HTTPResponse::forbidden($e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Error deleting comment: ' . $e->getMessage());
-            return api_error('Failed to delete comment.', null, 500);
+            Log::error('Error deleting comment: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to delete comment.');
         }
     }
 
     /**
      * Update the specified comment reply.
+     *
+     * @param UpdateCommentRequest $request
+     * @param CommentReply $reply
+     * @return JsonResponse
      */
     public function updateReply(UpdateCommentRequest $request, CommentReply $reply): JsonResponse
     {
@@ -106,17 +126,20 @@ class CommentController extends Controller
             $updatedReply = $this->commentService->updateReply($reply, $request->validated());
             $updatedReply->load('user');
 
-            return api_success(new CommentResource($updatedReply), 'Reply updated successfully.');
+            return HTTPResponse::ok(new CommentReplyResource($updatedReply), 'Reply updated successfully.');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return api_error($e->getMessage(), null, 403);
+            return HTTPResponse::forbidden($e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Error updating reply: ' . $e->getMessage());
-            return api_error('Failed to update reply.', null, 500);
+            Log::error('Error updating reply: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to update reply.');
         }
     }
 
     /**
      * Delete the specified comment reply.
+     *
+     * @param CommentReply $reply
+     * @return JsonResponse
      */
     public function destroyReply(CommentReply $reply): JsonResponse
     {
@@ -125,12 +148,12 @@ class CommentController extends Controller
 
             $this->commentService->deleteReply($reply);
 
-            return api_success(null, 'Reply deleted successfully.');
+            return HTTPResponse::ok(null, 'Reply deleted successfully.');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return api_error($e->getMessage(), null, 403);
+            return HTTPResponse::forbidden($e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Error deleting reply: ' . $e->getMessage());
-            return api_error('Failed to delete reply.', null, 500);
+            Log::error('Error deleting reply: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to delete reply.');
         }
     }
 }

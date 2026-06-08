@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Services\LikeService;
 use App\Models\Post;
 use App\Models\Comment;
 use App\Models\CommentReply;
+use App\Services\LikeService;
+use App\Helpers\HTTPResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -20,50 +21,62 @@ class LikeController extends Controller
     }
 
     /**
-     * Toggle like/unlike on a post.
+     * Toggle like on post.
+     *
+     * @param Post $post
+     * @return JsonResponse
      */
     public function togglePostLike(Post $post): JsonResponse
     {
         try {
-            $result = $this->likeService->togglePostLike($post, auth()->id());
-            $message = $result['liked'] ? 'Post liked.' : 'Post unliked.';
+            $userId = auth()->id();
+            $result = $this->likeService->togglePostLike($post, $userId);
+            $message = $result['liked'] ? 'Post liked successfully.' : 'Post unliked successfully.';
 
-            return api_success($result, $message);
+            return HTTPResponse::ok($result, $message);
         } catch (\Throwable $e) {
-            Log::error('Error toggling post like: ' . $e->getMessage());
-            return api_error('Failed to toggle like on post.', null, 500);
+            Log::error('Error toggling post like: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to toggle post like.');
         }
     }
 
     /**
-     * Toggle like/unlike on a comment.
+     * Toggle like on comment.
+     *
+     * @param Comment $comment
+     * @return JsonResponse
      */
     public function toggleCommentLike(Comment $comment): JsonResponse
     {
         try {
-            $result = $this->likeService->toggleCommentLike($comment, auth()->id());
-            $message = $result['liked'] ? 'Comment liked.' : 'Comment unliked.';
+            $userId = auth()->id();
+            $result = $this->likeService->toggleCommentLike($comment, $userId);
+            $message = $result['liked'] ? 'Comment liked successfully.' : 'Comment unliked successfully.';
 
-            return api_success($result, $message);
+            return HTTPResponse::ok($result, $message);
         } catch (\Throwable $e) {
-            Log::error('Error toggling comment like: ' . $e->getMessage());
-            return api_error('Failed to toggle like on comment.', null, 500);
+            Log::error('Error toggling comment like: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to toggle comment like.');
         }
     }
 
     /**
-     * Toggle like/unlike on a comment reply.
+     * Toggle like on reply.
+     *
+     * @param CommentReply $reply
+     * @return JsonResponse
      */
     public function toggleReplyLike(CommentReply $reply): JsonResponse
     {
         try {
-            $result = $this->likeService->toggleReplyLike($reply, auth()->id());
-            $message = $result['liked'] ? 'Reply liked.' : 'Reply unliked.';
+            $userId = auth()->id();
+            $result = $this->likeService->toggleReplyLike($reply, $userId);
+            $message = $result['liked'] ? 'Reply liked successfully.' : 'Reply unliked successfully.';
 
-            return api_success($result, $message);
+            return HTTPResponse::ok($result, $message);
         } catch (\Throwable $e) {
-            Log::error('Error toggling reply like: ' . $e->getMessage());
-            return api_error('Failed to toggle like on reply.', null, 500);
+            Log::error('Error toggling reply like: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to toggle reply like.');
         }
     }
 }

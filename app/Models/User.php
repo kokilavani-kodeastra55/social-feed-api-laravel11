@@ -26,14 +26,20 @@ class User extends Authenticatable
                 $feedData[] = [
                     'user_id' => $user->id,
                     'post_id' => $post->id,
-                    'created_at' => $post->created_at ?? now(),
-                    'updated_at' => $post->updated_at ?? now(),
                 ];
             }
             if (! empty($feedData)) {
                 Feed::insert($feedData);
             }
         });
+    }
+
+    /**
+     * Find a user by email address.
+     */
+    public static function findByEmail(string $email): ?User
+    {
+        return self::where('email', $email)->first();
     }
 
     /**

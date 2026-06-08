@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('feeds', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('post_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('post_id');
 
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('post_id')->references('id')->on('posts')->cascadeOnDelete();
             $table->unique(['user_id', 'post_id']);
-            $table->index(['user_id', 'created_at']);
+            $table->index('user_id');
         });
     }
 

@@ -10,6 +10,7 @@ class FeedResource extends BaseApiResource
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
+            'sorting_order' => $this->sorting_order,
             'created_at' => $this->created_at?->toIso8601String(),
             'user' => $this->user ? [
                 'id' => $this->user->id,

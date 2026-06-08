@@ -4,21 +4,20 @@ namespace App\Services;
 
 use App\Models\Comment;
 use App\Models\CommentReply;
+use App\Models\Like;
 use App\Models\Post;
-use App\Repositories\LikeRepository;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class LikeService
 {
-    protected LikeRepository $likeRepository;
-
-    public function __construct(LikeRepository $likeRepository)
-    {
-        $this->likeRepository = $likeRepository;
-    }
-
     /**
      * Toggle like on post.
+     *
+     * @param Post $post
+     * @param int $userId
+     * @return array
      */
     public function togglePostLike(Post $post, int $userId): array
     {
@@ -27,6 +26,10 @@ class LikeService
 
     /**
      * Toggle like on comment.
+     *
+     * @param Comment $comment
+     * @param int $userId
+     * @return array
      */
     public function toggleCommentLike(Comment $comment, int $userId): array
     {
@@ -35,6 +38,10 @@ class LikeService
 
     /**
      * Toggle like on reply.
+     *
+     * @param CommentReply $reply
+     * @param int $userId
+     * @return array
      */
     public function toggleReplyLike(CommentReply $reply, int $userId): array
     {
@@ -43,22 +50,34 @@ class LikeService
 
     /**
      * Private helper to toggle like.
+     *
+     * @param Model $model
+     * @param int $userId
+     * @return array
      */
     private function toggleLike(Model $model, int $userId): array
     {
-        $like = $this->likeRepository->findLikeForModel($model, $userId);
+        try {
+            $like = Like::findLikeForModel($model, $userId);
 
-        if ($like) {
-            $this->likeRepository->delete($like);
-            $liked = false;
-        } else {
-            $this->likeRepository->createForModel($model, $userId);
-            $liked = true;
+            if ($like) {
+                $like->delete();
+                $liked = false;
+            } else {
+                Like::createForModel($model, $userId);
+                $liked = true;
+            }
+
+            Cache::rememberForever('feed_version', fn() => 1);
+            Cache::increment('feed_version');
+
+            return [
+                'liked' => $liked,
+                'likes_count' => Like::countForModel($model),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('LikeService toggleLike error: ' . $e->getMessage(), ['exception' => $e]);
+            throw $e;
         }
-
-        return [
-            'liked' => $liked,
-            'likes_count' => $this->likeRepository->countForModel($model),
-        ];
     }
 }

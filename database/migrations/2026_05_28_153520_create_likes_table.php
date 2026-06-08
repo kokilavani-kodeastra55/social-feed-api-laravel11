@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('likes', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('user_id');
             $table->morphs('likeable');
-            $table->timestamps();
 
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->unique(['user_id', 'likeable_id', 'likeable_type']);
-            $table->index(['user_id', 'created_at']);
+            $table->index('user_id');
         });
     }
 

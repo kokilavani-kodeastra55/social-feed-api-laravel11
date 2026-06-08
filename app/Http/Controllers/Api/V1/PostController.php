@@ -8,7 +8,9 @@ use App\Http\Requests\Api\V1\UpdatePostRequest;
 use App\Http\Resources\Api\V1\PostResource;
 use App\Services\PostService;
 use App\Models\Post;
+use App\Helpers\HTTPResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
@@ -22,50 +24,66 @@ class PostController extends Controller
     }
 
     /**
-     * Display a listing of posts.
+     * Display a listing of posts with dynamic sorting.
+     *
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $posts = $this->postService->getAllPosts();
-            return api_success(PostResource::collection($posts), 'Posts retrieved successfully.');
+            $sortBy = $request->query('sort_by', 'sorting_order');
+            $sortOrder = $request->query('sort_order', 'asc');
+
+            $posts = $this->postService->getAllPosts($sortBy, $sortOrder);
+            return HTTPResponse::ok(PostResource::collection($posts), 'Posts retrieved successfully.');
         } catch (\Throwable $e) {
-            Log::error('Error fetching posts: ' . $e->getMessage());
-            return api_error('Failed to retrieve posts.', null, 500);
+            Log::error('Error fetching posts: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to retrieve posts.');
         }
     }
 
     /**
      * Store a newly created post.
+     *
+     * @param StorePostRequest $request
+     * @return JsonResponse
      */
     public function store(StorePostRequest $request): JsonResponse
     {
         try {
             $post = $this->postService->createPost($request->validated(), $request->user()->id);
             $post->load('user');
-            return api_success(new PostResource($post), 'Post created successfully.', 201);
+            return HTTPResponse::created(new PostResource($post), 'Post created successfully.');
         } catch (\Throwable $e) {
-            Log::error('Error creating post: ' . $e->getMessage());
-            return api_error('Failed to create post.', null, 500);
+            Log::error('Error creating post: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to create post.');
         }   
     }
 
     /**
      * Display the specified post.
+     *
+     * @param Post $post
+     * @return JsonResponse
      */
     public function show(Post $post): JsonResponse
     {
         try {
             $post->load('user');
-            return api_success(new PostResource($post), 'Post retrieved successfully.');
+            return HTTPResponse::ok(new PostResource($post), 'Post retrieved successfully.');
         } catch (\Throwable $e) {
-            Log::error('Error retrieving post: ' . $e->getMessage());
-            return api_error('Failed to retrieve post.', null, 500);
+            Log::error('Error retrieving post: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to retrieve post.');
         }
     }
 
     /**
      * Update the specified post.
+     *
+     * @param UpdatePostRequest $request
+     * @param Post $post
+     * @return JsonResponse
      */
     public function update(UpdatePostRequest $request, Post $post): JsonResponse
     {
@@ -75,17 +93,20 @@ class PostController extends Controller
             $updatedPost = $this->postService->updatePost($post, $request->validated());
             $updatedPost->load('user');
 
-            return api_success(new PostResource($updatedPost), 'Post updated successfully.');
+            return HTTPResponse::ok(new PostResource($updatedPost), 'Post updated successfully.');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return api_error($e->getMessage(), null, 403);
+            return HTTPResponse::forbidden($e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Error updating post: ' . $e->getMessage());
-            return api_error('Failed to update post.', null, 500);
+            Log::error('Error updating post: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to update post.');
         }
     }
 
     /**
      * Remove the specified post from storage.
+     *
+     * @param Post $post
+     * @return JsonResponse
      */
     public function destroy(Post $post): JsonResponse
     {
@@ -94,12 +115,12 @@ class PostController extends Controller
 
             $this->postService->deletePost($post);
 
-            return api_success(null, 'Post deleted successfully.');
+            return HTTPResponse::ok(null, 'Post deleted successfully.');
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return api_error($e->getMessage(), null, 403);
+            return HTTPResponse::forbidden($e->getMessage());
         } catch (\Throwable $e) {
-            Log::error('Error deleting post: ' . $e->getMessage());
-            return api_error('Failed to delete post.', null, 500);
+            Log::error('Error deleting post: ' . $e->getMessage(), ['exception' => $e]);
+            return HTTPResponse::internalServerError('Failed to delete post.');
         }
     }
 }
